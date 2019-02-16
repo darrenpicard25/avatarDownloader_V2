@@ -13,20 +13,36 @@ function getRepoContributors(repoOwner, repoName, cb) {
   };
   request(options, function(err, res, body) {
     let data = JSON.parse(body);
+    if (data.message === 'Not Found') {
+      console.log('Could not find repoOwner or repoName');
+    } else {}
     //Sending data to the callback function
-    cb(err, data);
-  });
+      cb(err, data);
+    });
 }
 
 function downloadImageByURL(url, filePath) {
+  let writingError = false;
+  let getError = false;
+  let responseError = false;
   request.get(url)
        .on('error', function (err) {
-         throw err;
+         getError = true;
        })
        .on('response', function (response) {
-         console.log('Response Status Code: ', response.statusCode);
+          if (response.statusCode !== 200) {
+            responseError = true;
+          }
        })
-       .pipe(fs.createWriteStream(filePath));
+       .pipe(fs.createWriteStream(filePath))
+       //Piping Errors
+       .on('error', function (err) {
+        console.log('An Error has occured. Please Ensure writing path is correct');
+        return false;
+       })
+       .on('finish', function () {
+        return true;
+       });
 }
 
 //Main function
@@ -39,11 +55,19 @@ function main () {
   }
   getRepoContributors (owner, repo, (err, results) => {
     console.log('Errors: ', err);
+    let numberOfDownloads = 0;
+    let numberOfAttempts = 0;
     for (let person of results) {
+      numberOfAttempts ++;
       let avatarURL = person.avatar_url;
       let savePath = `./avatars/${person.login}.jpg`;
-      downloadImageByURL(avatarURL, savePath);
+      let numberOfDownloads = 0;
+      if (downloadImageByURL(avatarURL, savePath)) {
+        numberOfDownloads += 1;
+      }
     }
+    console.log('Number of Attempts: ', numberOfAttempts);
+    console.log('Number of Downloads: ', numberOfDownloads);
   });
 }
 
