@@ -28,14 +28,22 @@ function downloadImageByURL(url, filePath) {
        .pipe(fs.createWriteStream(filePath));
 }
 
-
-getRepoContributors ('jquery', 'jquery', (err, results) => {
-  console.log('Errors: ', err);
-  for (let person of results) {
-    let avatarURL = person.avatar_url;
-    let savePath = `./avatars/${person.login}.jpg`;
-    downloadImageByURL(avatarURL, savePath);
+function main () {
+  let [owner, repo] = process.argv.slice(2);
+  if (!(owner && repo)) {
+    console.log('\nPlease enter the owner and repo you wish to download from in the program\n');
+    return;
   }
-  // console.log('Results: ', results);
-});
+  getRepoContributors (owner, repo, (err, results) => {
+    console.log('Errors: ', err);
+    for (let person of results) {
+      let avatarURL = person.avatar_url;
+      let savePath = `./avatars/${person.login}.jpg`;
+      downloadImageByURL(avatarURL, savePath);
+    }
+  });
+}
+
+main();
+
 
