@@ -6,3 +6,6 @@ secrets.js
 
 
 *.jpg
+
+
+.env
